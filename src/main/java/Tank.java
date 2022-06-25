@@ -1,48 +1,57 @@
-import java.awt.*;
+import lombok.Data;
 
+import java.awt.*;
+import java.util.Random;
+
+@Data
 public class Tank {
-    private int x, y;
+
+    public static int w = ResourceMgr.goodTankD.getWidth();
+    public static int h = ResourceMgr.goodTankD.getHeight();
+
     private Dir dir = Dir.DOWN;
-    private static final int SPEED = 10;
+
+    private static final int SPEED = 4;
+
     private TankFrame tankFrame = null;
 
-    private boolean moving = false;
+    private boolean living = true;
 
-    public boolean isMoving() {
-        return moving;
-    }
+    private boolean moving = true;
 
-    public Dir getDir() {
-        return dir;
-    }
+    private int x, y;
 
-    public void setMoving(boolean moving) {
-        this.moving = moving;
-    }
+    private Random random = new Random();
 
-    public void setDir(Dir dir) {
-        this.dir = dir;
-    }
+    private Group group = Group.BAD;
 
-    public Tank(int x, int y, Dir dir, TankFrame tankFrame) {
+    Rectangle rect = new Rectangle();
+
+
+    public Tank(int x, int y, Dir dir, TankFrame tankFrame, Group group) {
         super();
         this.dir = dir;
         this.x = x;
         this.y = y;
         this.tankFrame = tankFrame;
+        this.group = group;
     }
 
-    public void paint(Graphics g) {
-        Color c = g.getColor();
-        g.setColor(Color.BLUE);
-        g.fillRect(x, y, 50, 50);
-        g.setColor(c);
-        move();
-
+    public void fire() {
+        int bx = this.x + Tank.w / 2 - Bullet.w / 2;
+        int by = this.y + Tank.h / 2 - Bullet.h / 2;
+        tankFrame.bullets.add(new Bullet(bx, by, this.dir, this.tankFrame,this.group));
+        if(this.group == Group.GOOD) new Thread(()->new Audio("audio/tank_fire.wav").play()).start();
     }
 
-    public void move() {
-        if (!moving) return;
+    private void move() {
+        if(!living) return;
+
+        if(!moving) return ;
+
+        //save the oldDir for TankDirChangedMsg
+        //oldDir = dir;
+
         switch (dir) {
             case LEFT:
                 x -= SPEED;
@@ -57,9 +66,60 @@ public class Tank {
                 y += SPEED;
                 break;
         }
+        if(this.group == Group.BAD && random.nextInt(100) > 95)
+            this.fire();
+
+        if(this.group == Group.BAD && random.nextInt(100) > 95)
+            randomDir();
+
+        boundsCheck();
+        //update rect
+        rect.x = this.x;
+        rect.y = this.y;
+
     }
 
-    public void fire() {
-        tankFrame.bullets.add(new Bullet(this.x, this.y, this.dir, this.tankFrame));
+    private void boundsCheck() {
+        if (this.x < 0) {
+            x = 0;
+        } else if (this.y < 28) {
+            y = 28;
+        } else if (this.x > TankFrame.GAME_WIDTH - Tank.w - 13) {
+            x = TankFrame.GAME_WIDTH - Tank.w - 13;
+        } else if (this.y > TankFrame.GAME_HIGHT - Tank.h - 15) {
+            y = TankFrame.GAME_HIGHT - Tank.h - 15;
+        }
+    }
+
+    private void randomDir() {
+        this.dir = Dir.values()[random.nextInt(4)];
+    }
+
+
+    public void paint(Graphics g) {
+        if (!living) {
+            tankFrame.tanks.remove(this);
+        }
+        switch (dir) {
+            case LEFT:
+                g.drawImage(this.group == Group.GOOD ? ResourceMgr.goodTankL : ResourceMgr.badTankL, x, y, null);
+                break;
+            case UP:
+                g.drawImage(this.group == Group.GOOD ? ResourceMgr.goodTankU : ResourceMgr.badTankU, x, y, null);
+                break;
+            case RIGHT:
+                g.drawImage(this.group == Group.GOOD ? ResourceMgr.goodTankR : ResourceMgr.badTankR, x, y, null);
+                break;
+            case DOWN:
+                g.drawImage(this.group == Group.GOOD ? ResourceMgr.goodTankD : ResourceMgr.badTankD, x, y, null);
+                break;
+        }
+        move();
+
+    }
+
+
+    public void die() {
+        this.living = false;
     }
 }
