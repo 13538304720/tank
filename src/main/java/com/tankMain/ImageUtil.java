@@ -1,3 +1,5 @@
+package com.tankMain;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 

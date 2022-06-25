@@ -1,4 +1,4 @@
-import lombok.Data;
+package com.tankMain;
 
 import java.util.Properties;
 

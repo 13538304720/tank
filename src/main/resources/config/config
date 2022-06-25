@@ -1,3 +1,10 @@
 #https://github.com/bjmashibing/tank
 #初始化坦克数量
-innitTankCount=6
+initTankCount=6
+tankSpeed=5
+bulletSpeed=10
+gameWidth=1080
+gameHeight=720
+#fireStrategy
+goodFS=com.tankMain.strategy.FourDirFireStrategy
+badFS=com.tankMain.strategy.DefaultFireStrategy
